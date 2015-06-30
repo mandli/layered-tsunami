@@ -126,7 +126,7 @@ def setplot(plotdata,eta=[0.0,-300.0],rho=[1025.0,1045.0],g=9.81,dry_tolerance=1
     ylimits_depth = [-4000.0,100.0]
     xlimits_zoomed = [-30e3-1e3,-30e3+1e3]
     ylimits_surface_zoomed = [eta[0] - 0.5,eta[0] + 0.5]
-    ylimits_internal_zoomed = [eta[1] - 6.0,eta[1] + 6.0] 
+    ylimits_internal_zoomed = [eta[1] - 0.5,eta[1] + 0.5] 
     ylimits_momentum = [-40,10]
     # ylimits_velocities = [-1.0,1.0]
     ylimits_velocities = [-0.04,0.04]
