@@ -3,6 +3,8 @@
 
 r"""Idealized tsunami test cases"""
 
+import numpy
+
 from clawpack.riemann import layered_shallow_water_1D
 import clawpack.clawutil.runclaw as runclaw
 from clawpack.pyclaw.plot import plot
@@ -18,6 +20,28 @@ def set_tsunami_init_condition(state, epsilon, single_layer=False,
     state.q[0,:] += (x > bounds[0]) * (x < bounds[1]) * rho[0] * epsilon
 
 
+def set_acta_numerica_init_condition(state, epsilon, single_layer=False, internal_only=False):
+    """Set initial condition based on the intitial condition in
+    
+    LeVeque, R. J., George, D. L. & Berger, M. J. Tsunami Propagation and 
+    inundation with adaptively refined finite volume methods. Acta Numerica 
+    211–289 (2011).  doi:10.1017/S0962492904
+    """
+
+    rho = state.problem_data['rho']    
+    x = state.grid.dimensions[0].centers
+    xmid = 0.5 * (-180e3 - 80e3)
+    
+    deta = epsilon * numpy.sin((x-xmid) * numpy.pi / (-80e3 - xmid))
+    if single_layer:
+        state.q[0,:] += (x > -130e3) * (x < -80e3) * rho[0] * deta
+    else:
+        state.q[2,:] += (x > -130e3) * (x < -80e3) * rho[1] * deta
+
+    if internal_only:
+        state.q[0,:] -= (x > -130e3) * (x < -80e3) * rho[0] * deta
+
+
 def set_momentum_impulse(state, energy_impulse, single_layer=False, 
                                                 bounds=[-130e3, -80e3]):
 
@@ -25,12 +49,16 @@ def set_momentum_impulse(state, energy_impulse, single_layer=False,
 
     # Note rho is already included in depth conserved variable
     if single_layer:
-        state.q[1, :] += (x > bounds[0]) * (x < bounds[1]) * 2.0 * energy_impulse * state.q[0, :]
+        state.q[1, :] += (x > bounds[0]) * (x < bounds[1])      \
+                         * numpy.sign(energy_impulse) * numpy.sqrt(
+                            2.0 * numpy.abs(energy_impulse) * state.q[0, :])
     else:
-        state.q[3, :] += (x > bounds[0]) * (x < bounds[1]) * 2.0 * energy_impulse * state.q[2, :]
+        state.q[3, :] += (x > bounds[0]) * (x < bounds[1])      \
+                         * numpy.sign(energy_impulse) * numpy.sqrt(
+                            2.0 * numpy.abs(energy_impulse) * state.q[2, :])
 
 
-def jump_shelf(wave_height, energy_impulse, **kargs):
+def jump_shelf(wave_height, **kargs):
     r"""Shelf test"""
 
     # Single layer test
@@ -38,9 +66,11 @@ def jump_shelf(wave_height, energy_impulse, **kargs):
 
     # Construct output and plot directory paths
     if single_layer:
-        prefix = 'sl_h%s_m%s' % (int(wave_height), int(energy_impulse))
+        prefix = 'sl_h%s' % (int(wave_height))
+    elif kargs.get("internal_only", False):
+        prefix = 'il_h%s' % (int(wave_height))
     else:
-        prefix = 'ml_h%s_m%s' % (int(wave_height), int(energy_impulse))
+        prefix = 'ml_h%s' % (int(wave_height))
     name = 'multilayer/tsunami/jump'
     outdir,plotdir,log_path = runclaw.create_output_paths(name,prefix,**kargs)
     
@@ -132,11 +162,12 @@ def jump_shelf(wave_height, energy_impulse, **kargs):
     # Ocean at rest
     ml.qinit.set_quiescent_init_condition(state, single_layer=single_layer)
     # Set surface perturbations
-    set_tsunami_init_condition(solution.state, wave_height, single_layer=single_layer,
-                                                    bounds=[-50e3, -30e3])
+    # set_tsunami_init_condition(solution.state, wave_height, single_layer=single_layer,
+                                                    # bounds=[-50e3, -30e3])
+    set_acta_numerica_init_condition(state, wave_height, single_layer=single_layer, internal_only=kargs.get('internal_only', False))
     # Set momentum from horizontal movement
-    set_momentum_impulse(solution.state, energy_impulse, single_layer=single_layer,
-                                                bounds=[-50e3, -30e3])
+    # set_momentum_impulse(solution.state, energy_impulse, single_layer=single_layer,
+                                                # bounds=[-50e3, -30e3])
     
     # ================================
     # = Create simulation controller =
@@ -173,7 +204,7 @@ def jump_shelf(wave_height, energy_impulse, **kargs):
          file_format=controller.output_format,**plot_kargs)
 
          
-def sloped_shelf(wave_height, energy_impulse, **kargs):
+def sloped_shelf(wave_height, **kargs):
     r"""Sloped shelf test"""
 
     # Single layer test
@@ -181,9 +212,11 @@ def sloped_shelf(wave_height, energy_impulse, **kargs):
 
     # Construct output and plot directory paths
     if single_layer:
-        prefix = 'sl_h%s_e%s' % (int(wave_height), int(energy_impulse))
+        prefix = 'sl_h%s' % (int(wave_height))
+    elif kargs.get("internal_only", False):
+        prefix = 'il_h%s' % (int(wave_height))
     else:
-        prefix = 'ml_h%s_e%s' % (int(wave_height), int(energy_impulse))
+        prefix = 'ml_h%s' % (int(wave_height))
     name = 'multilayer/tsunami/sloped'
     outdir,plotdir,log_path = runclaw.create_output_paths(name,prefix,**kargs)
     
@@ -277,11 +310,13 @@ def sloped_shelf(wave_height, energy_impulse, **kargs):
     # Ocean at rest
     ml.qinit.set_quiescent_init_condition(state, single_layer=single_layer)
     # Set surface perturbations
-    set_tsunami_init_condition(solution.state, wave_height, single_layer=single_layer,
-                                                    bounds=[-130e3, -110e3])
+    # set_tsunami_init_condition(solution.state, wave_height, single_layer=single_layer,
+                                                    # bounds=[-130e3, -110e3])
+    set_acta_numerica_init_condition(state, wave_height, single_layer=single_layer, internal_only=kargs.get('internal_only', False))
+
     # Set momentum from horizontal movement
-    set_momentum_impulse(solution.state, energy_impulse, single_layer=single_layer,
-                                                bounds=[-130e3, -110e3])
+    # set_momentum_impulse(solution.state, energy_impulse, single_layer=single_layer,
+                                                # bounds=[-130e3, -110e3])
     
     
     # ================================
@@ -321,10 +356,10 @@ def sloped_shelf(wave_height, energy_impulse, **kargs):
 
 if __name__ == "__main__":
         
-    wave_height = 0.2
-    energy_impulse = -0.01
+    wave_height = 6.0
 
-    # jump_shelf(wave_height, energy_impulse, single_layer=False, iplot=False, htmlplot=True)
-    # jump_shelf(wave_height, energy_impulse, single_layer=True, iplot=False, htmlplot=True)
-    # sloped_shelf(wave_height, energy_impulse, single_layer=False, iplot=False, htmlplot=True)
-    sloped_shelf(wave_height, energy_impulse, single_layer=True, iplot=True, htmlplot=False)
+    jump_shelf(wave_height, single_layer=False, iplot=False, htmlplot=True)
+    jump_shelf(wave_height, single_layer=False, iplot=False, htmlplot=True)
+
+    sloped_shelf(wave_height, single_layer=False, iplot=False, htmlplot=True)
+    sloped_shelf(wave_height, single_layer=True, iplot=False, htmlplot=True)

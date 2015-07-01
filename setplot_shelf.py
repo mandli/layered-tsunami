@@ -125,11 +125,11 @@ def setplot(plotdata,eta=[0.0,-300.0],rho=[1025.0,1045.0],g=9.81,dry_tolerance=1
     xlimits = [-400e3,0.0]
     ylimits_depth = [-4000.0,100.0]
     xlimits_zoomed = [-30e3-1e3,-30e3+1e3]
-    ylimits_surface_zoomed = [eta[0] - 0.5,eta[0] + 0.5]
-    ylimits_internal_zoomed = [eta[1] - 0.5,eta[1] + 0.5] 
+    ylimits_surface_zoomed = [eta[0] - 7.0, eta[0] + 7.0]
+    ylimits_internal_zoomed = [eta[1] - 7.0, eta[1] + 7.0] 
     ylimits_momentum = [-40,10]
     # ylimits_velocities = [-1.0,1.0]
-    ylimits_velocities = [-0.04,0.04]
+    ylimits_velocities = [-1.5, 1.5]
     ylimits_kappa = [0.0,1.2]
         
     # Create data object
@@ -365,8 +365,8 @@ def setplot(plotdata,eta=[0.0,-300.0],rho=[1025.0,1045.0],g=9.81,dry_tolerance=1
 
     plotdata.printfigs = True                # print figures
     plotdata.print_format = 'png'            # file format
-    # plotdata.print_framenos = 'all'          # list of frames to print
-    plotdata.print_framenos = [0,30,100,200,300]
+    plotdata.print_framenos = 'all'          # list of frames to print
+    # plotdata.print_framenos = [0,30,100,200,300]
     plotdata.print_fignos = 'all'            # list of figures to print
     plotdata.html = True                     # create html files of plots?
     plotdata.html_homelink = '../README.html'   # pointer for top of index

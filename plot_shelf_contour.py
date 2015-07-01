@@ -105,6 +105,6 @@ if __name__=="__main__":
         ref_lines = ( [-30e3], [-130e3,-30e3] )
         for (i,shelf_type) in enumerate(['multilayer/tsunami/jump','multilayer/tsunami/sloped']):
             for layers in ['ml','sl']:
-                path = os.path.join(os.environ['DATA_PATH'],shelf_type,'%s_n2000_output' % layers)
-                out_path = os.path.join(os.environ['DATA_PATH'],shelf_type,'%s_n2000_plots' % layers)
+                path = os.path.join(os.environ['DATA_PATH'],shelf_type,'%s_h6_output' % layers)
+                out_path = os.path.join(os.environ['DATA_PATH'],shelf_type,'%s_h6_plots' % layers)
                 plot_contour(path,out_dir=out_path,ref_lines=ref_lines[i])
